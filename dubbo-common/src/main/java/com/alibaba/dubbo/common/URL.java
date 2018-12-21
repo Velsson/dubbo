@@ -937,11 +937,6 @@ public final class URL implements Serializable {
         return addParameter(key, String.valueOf(value));
     }
 
-    public URL addParameter(String key, CharSequence value) {
-        if (value == null || value.length() == 0) return this;
-        return addParameter(key, String.valueOf(value));
-    }
-
     public URL addParameter(String key, String value) {
         if (key == null || key.length() == 0
                 || value == null || value.length() == 0) {
@@ -955,6 +950,11 @@ public final class URL implements Serializable {
         Map<String, String> map = new HashMap<String, String>(getParameters());
         map.put(key, value);
         return new URL(protocol, username, password, host, port, path, map);
+    }
+
+    public URL addParameter(String key, CharSequence value) {
+        if (value == null || value.length() == 0) return this;
+        return addParameter(key, String.valueOf(value));
     }
 
     public URL addParameterIfAbsent(String key, String value) {

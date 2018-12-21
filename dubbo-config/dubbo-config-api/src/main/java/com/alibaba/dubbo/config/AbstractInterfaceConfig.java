@@ -187,6 +187,65 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
     /**
+     * 加载监控中心 URL
+     *
+     * @param registryURL 注册中心 URL
+     * @return 监控中心 URL
+     */
+    protected URL loadMonitor(URL registryURL) {
+        // 从 属性配置 中加载配置到 MonitorConfig 对象。
+        if (monitor == null) {
+            String monitorAddress = ConfigUtils.getProperty("dubbo.monitor.address");
+            String monitorProtocol = ConfigUtils.getProperty("dubbo.monitor.protocol");
+            if ((monitorAddress == null || monitorAddress.length() == 0) && (monitorProtocol == null || monitorProtocol.length() == 0)) {
+                return null;
+            }
+
+            monitor = new MonitorConfig();
+            if (monitorAddress != null && monitorAddress.length() > 0) {
+                monitor.setAddress(monitorAddress);
+            }
+            if (monitorProtocol != null && monitorProtocol.length() > 0) {
+                monitor.setProtocol(monitorProtocol);
+            }
+        }
+        appendProperties(monitor);
+        // 添加 `interface` `dubbo` `timestamp` `pid` 到 `map` 集合中
+        Map<String, String> map = new HashMap<String, String>();
+        map.put(Constants.INTERFACE_KEY, MonitorService.class.getName());
+        map.put("dubbo", Version.getVersion());
+        map.put(Constants.TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));
+        if (ConfigUtils.getPid() > 0) {
+            map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
+        }
+        // 将 MonitorConfig ，添加到 `map` 集合中。
+        appendParameters(map, monitor);
+        // 获得地址
+        String address = monitor.getAddress();
+        String sysaddress = System.getProperty("dubbo.monitor.address");
+        if (sysaddress != null && sysaddress.length() > 0) {
+            address = sysaddress;
+        }
+        // 直连监控中心服务器地址
+        if (ConfigUtils.isNotEmpty(address)) {
+            // 若不存在 `protocol` 参数，默认 "dubbo" 添加到 `map` 集合中。
+            if (!map.containsKey(Constants.PROTOCOL_KEY)) {
+                if (ExtensionLoader.getExtensionLoader(MonitorFactory.class).hasExtension("logstat")) {
+                    map.put(Constants.PROTOCOL_KEY, "logstat");
+                } else {
+                    map.put(Constants.PROTOCOL_KEY, "dubbo");
+                }
+            }
+            // 解析地址，创建 Dubbo URL 对象。
+            return UrlUtils.parseURL(address, map);
+        // 从注册中心发现监控中心地址
+        } else if (Constants.REGISTRY_PROTOCOL.equals(monitor.getProtocol()) && registryURL != null) {
+            return registryURL.setProtocol("dubbo").addParameter(Constants.PROTOCOL_KEY, "registry").addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map));
+        }
+        return null;
+    }
+
+    /**
      * 加载注册中心 URL 数组
      *
      * @param provider 是否是服务提供者
@@ -247,65 +306,6 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
         }
         return registryList;
-    }
-
-    /**
-     * 加载监控中心 URL
-     *
-     * @param registryURL 注册中心 URL
-     * @return 监控中心 URL
-     */
-    protected URL loadMonitor(URL registryURL) {
-        // 从 属性配置 中加载配置到 MonitorConfig 对象。
-        if (monitor == null) {
-            String monitorAddress = ConfigUtils.getProperty("dubbo.monitor.address");
-            String monitorProtocol = ConfigUtils.getProperty("dubbo.monitor.protocol");
-            if ((monitorAddress == null || monitorAddress.length() == 0) && (monitorProtocol == null || monitorProtocol.length() == 0)) {
-                return null;
-            }
-
-            monitor = new MonitorConfig();
-            if (monitorAddress != null && monitorAddress.length() > 0) {
-                monitor.setAddress(monitorAddress);
-            }
-            if (monitorProtocol != null && monitorProtocol.length() > 0) {
-                monitor.setProtocol(monitorProtocol);
-            }
-        }
-        appendProperties(monitor);
-        // 添加 `interface` `dubbo` `timestamp` `pid` 到 `map` 集合中
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(Constants.INTERFACE_KEY, MonitorService.class.getName());
-        map.put("dubbo", Version.getVersion());
-        map.put(Constants.TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));
-        if (ConfigUtils.getPid() > 0) {
-            map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
-        }
-        // 将 MonitorConfig ，添加到 `map` 集合中。
-        appendParameters(map, monitor);
-        // 获得地址
-        String address = monitor.getAddress();
-        String sysaddress = System.getProperty("dubbo.monitor.address");
-        if (sysaddress != null && sysaddress.length() > 0) {
-            address = sysaddress;
-        }
-        // 直连监控中心服务器地址
-        if (ConfigUtils.isNotEmpty(address)) {
-            // 若不存在 `protocol` 参数，默认 "dubbo" 添加到 `map` 集合中。
-            if (!map.containsKey(Constants.PROTOCOL_KEY)) {
-                if (ExtensionLoader.getExtensionLoader(MonitorFactory.class).hasExtension("logstat")) {
-                    map.put(Constants.PROTOCOL_KEY, "logstat");
-                } else {
-                    map.put(Constants.PROTOCOL_KEY, "dubbo");
-                }
-            }
-            // 解析地址，创建 Dubbo URL 对象。
-            return UrlUtils.parseURL(address, map);
-        // 从注册中心发现监控中心地址
-        } else if (Constants.REGISTRY_PROTOCOL.equals(monitor.getProtocol()) && registryURL != null) {
-            return registryURL.setProtocol("dubbo").addParameter(Constants.PROTOCOL_KEY, "registry").addParameterAndEncoded(Constants.REFER_KEY, StringUtils.toQueryString(map));
-        }
-        return null;
     }
 
     /**

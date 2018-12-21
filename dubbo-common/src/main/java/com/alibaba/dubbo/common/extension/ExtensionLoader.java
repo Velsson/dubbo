@@ -295,6 +295,29 @@ public class ExtensionLoader<T> {
     }
 
     /**
+     * 匹配分组
+     *
+     * @param group 过滤的分组条件。若为空，无需过滤
+     * @param groups 配置的分组
+     * @return 是否匹配
+     */
+    private boolean isMatchGroup(String group, String[] groups) {
+        // 为空，无需过滤
+        if (group == null || group.length() == 0) {
+            return true;
+            // 匹配
+        }
+        if (groups != null && groups.length > 0) {
+            for (String g : groups) {
+                if (group.equals(g)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Get activate extensions.
      *
      * 获得符合自动激活条件的拓展对象数组
@@ -353,29 +376,6 @@ public class ExtensionLoader<T> {
             exts.addAll(usrs);
         }
         return exts;
-    }
-
-    /**
-     * 匹配分组
-     *
-     * @param group 过滤的分组条件。若为空，无需过滤
-     * @param groups 配置的分组
-     * @return 是否匹配
-     */
-    private boolean isMatchGroup(String group, String[] groups) {
-        // 为空，无需过滤
-        if (group == null || group.length() == 0) {
-            return true;
-        }
-        // 匹配
-        if (groups != null && groups.length > 0) {
-            for (String g : groups) {
-                if (group.equals(g)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**

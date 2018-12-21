@@ -220,7 +220,8 @@ public class RedisRegistry extends FailbackRegistry {
                         break;//  If the server side has synchronized data, just write a single machine
                     }
                 } finally {
-                    jedisPool.returnResource(jedis);
+                    //jedisPool.returnResource(jedis);
+                    jedis.close();
                 }
             } catch (Throwable t) {
                 logger.warn("Failed to write provider heartbeat to redis registry. registry: " + entry.getKey() + ", cause: " + t.getMessage(), t);

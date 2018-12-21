@@ -22,7 +22,7 @@ import com.alibaba.dubbo.demo.entity.User;
 
 import java.util.Collection;
 
-public class DemoServiceImpl implements DemoService {
+public abstract class DemoServiceImpl implements DemoService {
 
     @Override
     public String sayHello(String name) {

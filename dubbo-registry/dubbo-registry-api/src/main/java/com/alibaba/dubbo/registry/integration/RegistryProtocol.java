@@ -155,7 +155,7 @@ public class RegistryProtocol implements Protocol {
         // 获得服务提供者 URL
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
 
-        //to judge to delay publish whether or not
+        //to judge to delay publish whether or not 判断是否延迟服务
         boolean register = registedProviderUrl.getParameter("register", true);
 
         // 向注册中心订阅服务消费者
